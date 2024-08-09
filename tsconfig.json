@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/dynamic/dynamic-frame.jsx", "app/api/[[...routes]]/route.tsx", "app/dynamic/dynamic-frame2.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/dynamic/dynamic-frame.jsx", "app/api/[[...routes]]/route.jsx", "app/dynamic/dynamic-frame2.jsx"],
   "exclude": ["node_modules"]
 }
