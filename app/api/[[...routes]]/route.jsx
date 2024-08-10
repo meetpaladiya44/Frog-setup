@@ -28,7 +28,7 @@ async function getPredictions(text) {
     );
 
     const contract = new ethers.Contract(
-      "0x7b257B3137a32b54214Bad43fd801f726b05a627", // Replace with your contract address
+      "0x384d7cE3FcD8502234446d9F080A97Af432382FC", // Replace with your contract address
       InvestRightABI,
       provider
     );
@@ -39,6 +39,28 @@ async function getPredictions(text) {
   } catch (error) {
     console.error("Error getting prediction:", error);
     return "Error: " + error.message;
+  }
+}
+
+function formatValue(value) {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (Array.isArray(value)) {
+    return value.map(formatValue).join(", ");
+  }
+  return value.toString();
+}
+
+function weiToEth(weiValue) {
+  const ethValue = parseFloat(ethers.formatEther(weiValue));
+
+  if (ethValue < 0.01) {
+    // For very small amounts, use more decimal places
+    return ethValue.toFixed(7);
+  } else {
+    // For larger amounts, round to 2 decimal places
+    return ethValue.toFixed(2);
   }
 }
 
@@ -95,39 +117,41 @@ app.frame("/", (c) => {
 app.frame("/:text", async (c) => {
   const { req, status } = c;
   const text = req.param("text") || "Crypto Test";
+  const baseUrl = process.env.NEXT_PUBLIC_URL;
+  const background = `${baseUrl}/bg.png`;
 
   const prediction = await getPredictions(text);
+  console.log(prediction);
 
   const [
     address,
-    symbol,
-    name,
-    totalVotes,
-    totalScore,
-    totalAmountStaked,
-    totalRewardsClaimed,
-    lastUpdateTime,
-    totalRewards,
-    amountStaked,
-    rewardsClaimed,
-    lastStakeId,
-    isActive,
-    stakers,
-    stakesIds,
+    coin,
+    reasoning,
+    currentPrice,
+    targetPrice,
+    stakeAmount,
+    viewAmount,
+    targetDate,
+    totalPositiveStake,
+    totalNegativeStake,
+    totalFeesCollected,
+    pythPriceId,
+    isDistributed,
+    positiveStakers,
+    negativeStakers,
   ] = prediction;
 
-  console.log(prediction);
   return c.res({
+    action: "/second/newframe",
     image: (
       <div
         style={{
           alignItems: "center",
-          background:
-            status === "response"
-              ? "linear-gradient(to right, #432889, #17101F)"
-              : "black",
-          backgroundSize: "100% 100%",
+          backgroundImage: `url('${background}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           display: "flex",
+          imageAspectRatio: "1:1",
           flexDirection: "column",
           flexWrap: "nowrap",
           height: "100%",
@@ -139,20 +163,320 @@ app.frame("/:text", async (c) => {
         <div
           style={{
             color: "white",
-            fontSize: 30,
+            fontSize: 25,
             fontStyle: "normal",
-            letterSpacing: "-0.025em",
+            letterSpacing: "1px",
             lineHeight: 1.4,
-            marginTop: 30,
-            padding: "0 120px",
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            bottom: "-65",
+            width: "20%",
+            left: "-25%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            // border: "1px solid red",
+          }}
+        >
+          {coin}
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            // bottom: "-25",
+            // left: "150",
+            // whiteSpace: "pre-wrap",
+            bottom: "-25",
+            maxWidth: "20px",
+            overflow: "visible",
+            left: "18%",
             whiteSpace: "pre-wrap",
           }}
         >
-          {address}
+          {weiToEth(viewAmount)}
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            // top: "125",
+            // left: "-205",
+            // whiteSpace: "pre-wrap",
+            maxWidth: "20px",
+            overflow: "visible",
+            top: "125",
+            right: "42%",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {new Date(
+            Number(formatValue(targetDate)) * 1000
+          ).toLocaleDateString()}
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            // top: "80",
+            // left: "125",
+            // whiteSpace: "pre-wrap",
+            top: "80",
+            right: "-17%",
+            maxWidth: "20px",
+            overflow: "visible",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          50%
         </div>
       </div>
     ),
-    intents: [<Button>Get Started</Button>],
+    intents: [<Button>View</Button>],
+  });
+});
+
+app.frame("/second/newframe", (c) => {
+  const baseUrl = process.env.NEXT_PUBLIC_URL;
+  const background = `${baseUrl}/bg2.png`;
+  return c.res({
+    action: "/third/frame/route",
+    image: (
+      <div
+        style={{
+          alignItems: "center",
+          backgroundImage: `url('${background}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          imageAspectRatio: "1:1",
+          flexDirection: "column",
+          flexWrap: "nowrap",
+          height: "100%",
+          justifyContent: "center",
+          textAlign: "center",
+          width: "100%",
+        }}
+      >
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            bottom: "-32",
+            maxWidth: "20px",
+            overflow: "visible",
+            left: "-35%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          0.0005
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            maxWidth: "20px",
+            overflow: "visible",
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            bottom: "13",
+            // border: "1px solid red",
+            left: "15%",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          0
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 20,
+            width: "40%",
+            height: "20%",
+            overflow: "visible",
+            maxWidth: "1000px",
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            textAlign: "left",
+            lineHeight: 1.4,
+            fontWeight: "bold",
+            position: "relative",
+            top: "90",
+            left: "10",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {(() => {
+            const fullText =
+              "Upcoming protocol upgrade promises enhanced scalability, attracting more developers and users to the ecosystem.";
+            const maxLength = 150; // Adjust this value to change when text gets truncated
+            return fullText.length > maxLength
+              ? fullText.slice(0, maxLength) + "..."
+              : fullText;
+          })()}
+        </div>
+      </div>
+    ),
+    intents: [<Button>View All Stats</Button>],
+  });
+});
+
+app.frame("/third/frame/route", (c) => {
+  const baseUrl = process.env.NEXT_PUBLIC_URL;
+  const background = `${baseUrl}/bg3.png`;
+  return c.res({
+    image: (
+      <div
+        style={{
+          alignItems: "center",
+          backgroundImage: `url('${background}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          imageAspectRatio: "1:1",
+          flexDirection: "column",
+          flexWrap: "nowrap",
+          height: "100%",
+          justifyContent: "center",
+          textAlign: "center",
+          width: "100%",
+        }}
+      >
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            bottom: "-33",
+            maxWidth: "20px",
+            right: "42%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          8
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            bottom: "10",
+            maxWidth: "20px",
+            left: "17%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          0.0034
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            top: "80",
+            maxWidth: "20px",
+            right: "43%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          0.345
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            top: "37",
+            maxWidth: "20px",
+            left: "16%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          0.269
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            bottom: "-125",
+            maxWidth: "20px",
+            right: "41%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          20%
+        </div>
+        <div
+          style={{
+            color: "white",
+            fontSize: 28,
+            fontStyle: "normal",
+            letterSpacing: "1px",
+            lineHeight: 1.4,
+            fontWeight: "bold", // Add this line to make the text bold
+            position: "relative",
+            top: "80",
+            maxWidth: "20px",
+            left: "17%",
+            whiteSpace: "pre-wrap",
+            // border: "1px solid red",
+          }}
+        >
+          0.5
+        </div>
+      </div>
+    ),
+    intents: [<Button.Link href="https://invest-right.vercel.app/attestation">Attest</Button.Link>],
   });
 });
 
