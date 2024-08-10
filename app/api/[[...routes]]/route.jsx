@@ -247,7 +247,7 @@ app.frame("/:text", async (c) => {
         </div>
       </div>
     ),
-    intents: [<Button>View</Button>],
+    intents: [<Button>Read</Button>],
   });
 });
 
@@ -255,7 +255,6 @@ app.frame("/second/newframe", (c) => {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg2.png`;
   return c.res({
-    action: "/third/frame/route",
     image: (
       <div
         style={{
@@ -290,7 +289,7 @@ app.frame("/second/newframe", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.0005
+          0.0005 
         </div>
         <div
           style={{
@@ -335,13 +334,17 @@ app.frame("/second/newframe", (c) => {
               "Upcoming protocol upgrade promises enhanced scalability, attracting more developers and users to the ecosystem.";
             const maxLength = 150; // Adjust this value to change when text gets truncated
             return fullText.length > maxLength
-              ? fullText.slice(0, maxLength) + "..."
+              ? fullText.slice(0, maxLength)
               : fullText;
           })()}
         </div>
       </div>
     ),
-    intents: [<Button>View All Stats</Button>],
+    intents: [
+    <Button action="/third/frame/route">View Stats</Button>,
+    <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>
+  ],
+
   });
 });
 
@@ -382,7 +385,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          8
+          8 
         </div>
         <div
           style={{
@@ -400,7 +403,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.0034
+          0.0034 
         </div>
         <div
           style={{
@@ -418,7 +421,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.345
+          0.345 
         </div>
         <div
           style={{
@@ -436,7 +439,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.269
+          0.269 
         </div>
         <div
           style={{
@@ -476,7 +479,10 @@ app.frame("/third/frame/route", (c) => {
         </div>
       </div>
     ),
-    intents: [<Button.Link href="https://invest-right.vercel.app/attestation">Attest</Button.Link>],
+    intents: [
+    <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
+    <Button action="/second/newframe">Back</Button>
+  ],
   });
 });
 
