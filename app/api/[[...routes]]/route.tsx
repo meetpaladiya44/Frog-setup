@@ -85,18 +85,6 @@ function formatValue(value: any): string {
   return value.toString();
 }
 
-function weiToEth(weiValue: bigint): string {
-  const ethValue = parseFloat(ethers.formatEther(weiValue));
-
-  if (ethValue < 0.01) {
-    // For very small amounts, use more decimal places
-    return ethValue.toFixed(7);
-  } else {
-    // For larger amounts, round to 2 decimal places
-    return ethValue.toFixed(2);
-  }
-}
-
 app.frame("/", (c) => {
   const { buttonValue, inputText, status } = c;
   const fruit = inputText || buttonValue;
@@ -258,7 +246,7 @@ app.frame("/:text", async (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {weiToEth(viewAmount)}
+          {(viewAmount)}
         </div>
         <div
           style={{
@@ -456,7 +444,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {weiToEth(stakeAmountG)}
+          {(stakeAmountG)}
         </div>
         <div
           style={{
@@ -473,7 +461,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {weiToEth(poolAmountG)}
+          {(poolAmountG)}
         </div>
         <div
           style={{
@@ -490,7 +478,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {weiToEth(totalPositiveStakeG)}
+          {(totalPositiveStakeG)}
         </div>
         <div
           style={{
@@ -507,7 +495,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {weiToEth(totalNegativeStakeG)}
+          {(totalNegativeStakeG)}
         </div>
         <div
           style={{
