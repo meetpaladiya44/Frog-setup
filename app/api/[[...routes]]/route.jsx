@@ -21,7 +21,16 @@ const app = new Frog({
   title: "Frog Frame",
 });
 
-async function getPredictions(text) {
+let address, idG, coin, reasoningG, currentPriceG, targetPriceG, stakeAmount, viewAmount, targetDate = "";
+
+function setData(idP, currentPriceP, targetPriceP, reasoningP) {
+  idG = idP;
+  currentPriceG = currentPriceP;
+  targetPriceG = targetPriceP;
+  reasoningG = reasoningP;
+}
+
+async function getPredictionsMain(text) {
   try {
     const provider = new ethers.JsonRpcProvider(
       "https://eth-sepolia.g.alchemy.com/v2/RlpjIG_DtVn1fVxzOufTIrTAa8YQSM1x"
@@ -120,7 +129,8 @@ app.frame("/:text", async (c) => {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg1.png`;
 
-  const prediction = await getPredictions(text);
+  console.log("Inside the first frame", text);
+  const prediction = await getPredictionsMain(text);
   console.log(prediction);
 
   const [
@@ -141,8 +151,10 @@ app.frame("/:text", async (c) => {
     negativeStakers,
   ] = prediction;
 
+  setData(text, currentPrice, targetPrice, reasoning);
+
   return c.res({
-    action: "/second/newframe",
+    // action: `${text}/secondframe`,
     image: (
       <div
         style={{
@@ -220,9 +232,7 @@ app.frame("/:text", async (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {new Date(
-            Number(formatValue(targetDate)) * 1000
-          ).toLocaleDateString()}
+          {new Date(Number(formatValue(targetDate)) * 1000).toLocaleDateString()}
         </div>
         <div
           style={{
@@ -247,11 +257,27 @@ app.frame("/:text", async (c) => {
         </div>
       </div>
     ),
-    intents: [<Button>Read</Button>],
+    intents: [
+    <Button action={`/${encodeURIComponent(text)}/secondframe`}>Read</Button>
+  ],
   });
 });
 
-app.frame("/second/newframe", (c) => {
+app.frame("/:text/secondframe", async (c) => {
+  const { req, status } = c;
+  const text = decodeURIComponent(req.param("text"));
+  console.log(typeof currentPriceG);
+  // let stringDummy = 5;
+  let stringDummy = "dummy2"; 
+  let jsonObject = JSON.stringify({ key: stringDummy });;
+  console.log(stringDummy);
+  console.log(typeof stringDummy);
+  const newCurrent = formatValue(currentPriceG);
+  const newTarget = formatValue(targetPriceG);
+  const newReason = formatValue(reasoningG);
+  console.log(newCurrent, newTarget, newReason);
+  console.log(typeof newCurrent, typeof newTarget, typeof newReason);
+  console.log("inside the second frame", text);
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg2.png`;
   return c.res({
@@ -289,7 +315,8 @@ app.frame("/second/newframe", (c) => {
             // border: "1px solid red",
           }}
         >
-          2700 
+          {newCurrent}
+          {/* current */}
         </div>
         <div
           style={{
@@ -308,7 +335,9 @@ app.frame("/second/newframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          3000
+          {`${newTarget}`}
+          {/* {jsonObject} */}
+          {/* target */}
         </div>
         <div
           style={{
@@ -330,7 +359,7 @@ app.frame("/second/newframe", (c) => {
           }}
         >
           {(() => {
-            const fullText = "Upcoming protocol upgrade promises enhanced scalability, attracting more developers and users to the ecosystem.";
+            const fullText = {newReason};
             const maxLength = 150; // Adjust this value to change when text gets truncated
             return fullText.length > maxLength
               ? fullText.slice(0, maxLength)
@@ -340,14 +369,14 @@ app.frame("/second/newframe", (c) => {
       </div>
     ),
     intents: [
-    <Button action="/third/frame/route">View Stats</Button>,
+    <Button  action={`/${encodeURIComponent(idG)}/thirdframe`}>View Stats</Button>,
     <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>
   ],
 
   });
 });
 
-app.frame("/third/frame/route", (c) => {
+app.frame("/:text/thirdframe", (c) => {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg3.png`;
   return c.res({
@@ -480,7 +509,7 @@ app.frame("/third/frame/route", (c) => {
     ),
     intents: [
     <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
-    <Button action="/second/newframe">Back</Button>
+    <Button  action={`/${encodeURIComponent(idG)}/secondframe`}>Back</Button>
   ],
   });
 });
