@@ -367,7 +367,7 @@ app.frame("/:text/secondframe", async (c) => {
     ),
     intents: [
       <Button action={`/${encodeURIComponent(idG)}/thirdframe`}>View Stats</Button>,
-      <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
+      <Button.Link href={`https://invest-right.vercel.app/attestation/${idG}`}>Challenge/Accept</Button.Link>,
     ],
   });
 });
@@ -499,7 +499,7 @@ app.frame("/:text/thirdframe", (c) => {
       </div>
     ),
     intents: [
-      <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
+      <Button.Link href={`https://invest-right.vercel.app/attestation/${idG}`}>Challenge/Accept</Button.Link>,
       <Button action={`/${encodeURIComponent(idG)}/secondframe`}>Back</Button>,
     ],
   });
