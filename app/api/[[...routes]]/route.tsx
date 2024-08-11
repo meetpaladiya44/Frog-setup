@@ -7,6 +7,7 @@ import { handle } from "frog/next";
 import { serveStatic } from "frog/serve-static";
 import InvestRightABI from "../../utils/InvestRightABI.json";
 import { Alchemy, Network } from "alchemy-sdk";
+import { neynar } from 'frog/middlewares'
 
 // Configure Alchemy SDK
 const alchemyConfig = {
@@ -20,7 +21,12 @@ const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   title: "Frog Frame",
-});
+}).use(
+  neynar({
+    apiKey: 'NEYNAR_FROG_FM',
+    features: ['interactor', 'cast'],
+  }),
+);
 
 let address: string, 
     idG: string, 
@@ -52,7 +58,7 @@ async function getPredictionsMain(text: string): Promise<any> {
     );
 
     const contract = new ethers.Contract(
-      "0x384d7cE3FcD8502234446d9F080A97Af432382FC", // Replace with your contract address
+      "0x7ACC7E73967300a20f4f5Ba92fF9CB548b47Ea30", // Replace with your contract address
       InvestRightABI,
       provider
     );
@@ -91,6 +97,13 @@ function weiToEth(weiValue: bigint): string {
 app.frame("/", (c) => {
   const { buttonValue, inputText, status } = c;
   const fruit = inputText || buttonValue;
+  
+  const { displayName, followerCount } = c.var.interactor || {}
+  console.log("contexttttttttt", c)
+  console.log('cast: ', c.var.cast)
+  console.log('interactor: ', c.var.interactor)
+  console.log(displayName, followerCount)
+
   return c.res({
     image: (
       <div
@@ -143,6 +156,12 @@ app.frame("/:text", async (c) => {
   const text = req.param("text") || "Crypto Test";
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg1.png`;
+
+  const { displayName, followerCount } = c.var.interactor || {}
+  console.log("contexttttttttt", c)
+  console.log('cast: ', c.var.cast)
+  console.log('interactor: ', c.var.interactor)
+  console.log(displayName, followerCount)
 
   console.log("Inside the first frame", text);
   const prediction = await getPredictionsMain(text);
@@ -273,6 +292,13 @@ app.frame("/:text/secondframe", async (c) => {
   const { req } = c;
   const text = decodeURIComponent(req.param("text"));
   console.log(typeof currentPriceG);
+
+  const { displayName, followerCount } = c.var.interactor || {}
+  console.log("contexttttttttt", c)
+  console.log('cast: ', c.var.cast)
+  console.log('interactor: ', c.var.interactor)
+  console.log(displayName, followerCount)
+
   
   const newCurrent = formatValue(currentPriceG);
   const newTarget = formatValue(targetPriceG);
