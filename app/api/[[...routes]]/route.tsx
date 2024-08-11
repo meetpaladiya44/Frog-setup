@@ -7,9 +7,6 @@ import { handle } from "frog/next";
 import { serveStatic } from "frog/serve-static";
 import InvestRightABI from "../../utils/InvestRightABI.json";
 import { Alchemy, Network } from "alchemy-sdk";
-import { neynar } from 'frog/middlewares'
-import abi from "../../abi.json";
-import type { Address } from "viem";
 
 // Configure Alchemy SDK
 const alchemyConfig = {
@@ -23,12 +20,7 @@ const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   title: "Frog Frame",
-}).use(
-  neynar({
-    apiKey: 'NEYNAR_FROG_FM',
-    features: ['interactor', 'cast'],
-  }),
-);
+});
 
 let address: string, 
     idG: string, 
@@ -42,7 +34,6 @@ let address: string,
     totalNegativeStakeG: bigint,
     targetDate: number = 0;
 
-//Global function
 function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string, stakeAmountP: bigint, poolAmountP: bigint, totalPositiveStakeP: bigint, totalNegativeStakeP: bigint) {
   idG = idP;
   currentPriceG = currentPriceP;
@@ -61,7 +52,7 @@ async function getPredictionsMain(text: string): Promise<any> {
     );
 
     const contract = new ethers.Contract(
-      "0x7ACC7E73967300a20f4f5Ba92fF9CB548b47Ea30", // Replace with your contract address
+      "0x384d7cE3FcD8502234446d9F080A97Af432382FC", // Replace with your contract address
       InvestRightABI,
       provider
     );
@@ -85,16 +76,21 @@ function formatValue(value: any): string {
   return value.toString();
 }
 
+function weiToEth(weiValue: bigint): string {
+  const ethValue = parseFloat(ethers.formatEther(weiValue));
+
+  if (ethValue < 0.01) {
+    // For very small amounts, use more decimal places
+    return ethValue.toFixed(7);
+  } else {
+    // For larger amounts, round to 2 decimal places
+    return ethValue.toFixed(2);
+  }
+}
+
 app.frame("/", (c) => {
   const { buttonValue, inputText, status } = c;
   const fruit = inputText || buttonValue;
-  
-  const { displayName, followerCount } = c.var.interactor || {}
-  console.log("contexttttttttt", c)
-  console.log('cast: ', c.var.cast)
-  console.log('interactor: ', c.var.interactor)
-  console.log(displayName, followerCount)
-
   return c.res({
     image: (
       <div
@@ -136,36 +132,17 @@ app.frame("/", (c) => {
       <TextInput placeholder="Enter custom fruit..." />,
       <Button value="apples">Apples</Button>,
       <Button value="oranges">Oranges</Button>,
-      // <Button value="bananas">Bananas</Button>,
-      <Button.Transaction target="/mint">Bananas</Button.Transaction>,
+      <Button value="bananas">Bananas</Button>,
       status === "response" && <Button.Reset>Reset</Button.Reset>,
     ],
   });
 });
-
-app.transaction('/mint', (c) => {
-  // Contract transaction response.
-  const address = c.address as Address;
-  console.log("Address came", address);
-  return c.contract({
-    abi,
-    chainId: 'eip155:10',
-    functionName: 'mint',
-    to: '0xd2135CfB216b74109775236E36d4b433F1DF507B'
-  })
-})
 
 app.frame("/:text", async (c) => {
   const { req, status } = c;
   const text = req.param("text") || "Crypto Test";
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg1.png`;
-
-  const { displayName, followerCount } = c.var.interactor || {}
-  console.log("contexttttttttt", c)
-  console.log('cast: ', c.var.cast)
-  console.log('interactor: ', c.var.interactor)
-  console.log(displayName, followerCount)
 
   console.log("Inside the first frame", text);
   const prediction = await getPredictionsMain(text);
@@ -246,7 +223,7 @@ app.frame("/:text", async (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {(viewAmount)}
+          {weiToEth(viewAmount)}
         </div>
         <div
           style={{
@@ -296,13 +273,6 @@ app.frame("/:text/secondframe", async (c) => {
   const { req } = c;
   const text = decodeURIComponent(req.param("text"));
   console.log(typeof currentPriceG);
-
-  const { displayName, followerCount } = c.var.interactor || {}
-  console.log("contexttttttttt", c)
-  console.log('cast: ', c.var.cast)
-  console.log('interactor: ', c.var.interactor)
-  console.log(displayName, followerCount)
-
   
   const newCurrent = formatValue(currentPriceG);
   const newTarget = formatValue(targetPriceG);
@@ -444,7 +414,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {(stakeAmountG)}
+          {weiToEth(stakeAmountG)}
         </div>
         <div
           style={{
@@ -461,7 +431,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {(poolAmountG)}
+          {weiToEth(poolAmountG)}
         </div>
         <div
           style={{
@@ -478,7 +448,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {(totalPositiveStakeG)}
+          {weiToEth(totalPositiveStakeG)}
         </div>
         <div
           style={{
@@ -495,7 +465,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {(totalNegativeStakeG)}
+          {weiToEth(totalNegativeStakeG)}
         </div>
         <div
           style={{
