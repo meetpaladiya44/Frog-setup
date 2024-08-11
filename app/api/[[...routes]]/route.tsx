@@ -7,9 +7,10 @@ import { handle } from "frog/next";
 import { serveStatic } from "frog/serve-static";
 import InvestRightABI from "../../utils/InvestRightABI.json";
 import { Alchemy, Network } from "alchemy-sdk";
+
 // Configure Alchemy SDK
 const alchemyConfig = {
-  apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY, // Replace with your Alchemy API key
+  apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string, // Replace with your Alchemy API key
   network: Network.ETH_SEPOLIA, // Use the appropriate network
 };
 
@@ -21,16 +22,24 @@ const app = new Frog({
   title: "Frog Frame",
 });
 
-let address, idG, coin, reasoningG, currentPriceG, targetPriceG, stakeAmount, viewAmount, targetDate = "";
+let address: string, 
+    idG: string, 
+    coin: string, 
+    reasoningG: string, 
+    currentPriceG: bigint, 
+    targetPriceG: bigint, 
+    stakeAmount: bigint, 
+    viewAmount: bigint, 
+    targetDate: number = 0;
 
-function setData(idP, currentPriceP, targetPriceP, reasoningP) {
+function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string) {
   idG = idP;
   currentPriceG = currentPriceP;
   targetPriceG = targetPriceP;
   reasoningG = reasoningP;
 }
 
-async function getPredictionsMain(text) {
+async function getPredictionsMain(text: string): Promise<any> {
   try {
     const provider = new ethers.JsonRpcProvider(
       "https://eth-sepolia.g.alchemy.com/v2/RlpjIG_DtVn1fVxzOufTIrTAa8YQSM1x"
@@ -45,13 +54,13 @@ async function getPredictionsMain(text) {
     const result = await contract.getPredictions(text);
     console.log("Prediction result:", result);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error getting prediction:", error);
     return "Error: " + error.message;
   }
 }
 
-function formatValue(value) {
+function formatValue(value: any): string {
   if (typeof value === "bigint") {
     return value.toString();
   }
@@ -61,7 +70,7 @@ function formatValue(value) {
   return value.toString();
 }
 
-function weiToEth(weiValue) {
+function weiToEth(weiValue: bigint): string {
   const ethValue = parseFloat(ethers.formatEther(weiValue));
 
   if (ethValue < 0.01) {
@@ -154,7 +163,6 @@ app.frame("/:text", async (c) => {
   setData(text, currentPrice, targetPrice, reasoning);
 
   return c.res({
-    // action: `${text}/secondframe`,
     image: (
       <div
         style={{
@@ -179,15 +187,14 @@ app.frame("/:text", async (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            bottom: "-65",
+            bottom: "-65px", // Added 'px' for units
             width: "20%",
             left: "-25%",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            // border: "1px solid red",
           }}
         >
           {coin}
@@ -199,12 +206,9 @@ app.frame("/:text", async (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            // bottom: "-25",
-            // left: "150",
-            // whiteSpace: "pre-wrap",
-            bottom: "-25",
+            bottom: "-25px", // Added 'px' for units
             maxWidth: "20px",
             overflow: "visible",
             left: "18%",
@@ -220,15 +224,12 @@ app.frame("/:text", async (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            // top: "125",
-            // left: "-205",
-            // whiteSpace: "pre-wrap",
+            top: "125px", // Added 'px' for units
+            right: "42%",
             maxWidth: "20px",
             overflow: "visible",
-            top: "125",
-            right: "42%",
             whiteSpace: "pre-wrap",
           }}
         >
@@ -241,12 +242,9 @@ app.frame("/:text", async (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            // top: "80",
-            // left: "125",
-            // whiteSpace: "pre-wrap",
-            top: "80",
+            top: "80px", // Added 'px' for units
             right: "-17%",
             maxWidth: "20px",
             overflow: "visible",
@@ -258,28 +256,32 @@ app.frame("/:text", async (c) => {
       </div>
     ),
     intents: [
-    <Button action={`/${encodeURIComponent(text)}/secondframe`}>Read</Button>
-  ],
+      <Button action={`/${encodeURIComponent(text)}/secondframe`}>Read</Button>,
+    ],
   });
 });
 
 app.frame("/:text/secondframe", async (c) => {
-  const { req, status } = c;
+  const { req } = c;
   const text = decodeURIComponent(req.param("text"));
   console.log(typeof currentPriceG);
-  // let stringDummy = 5;
-  let stringDummy = "dummy2"; 
-  let jsonObject = JSON.stringify({ key: stringDummy });;
+  
+  let stringDummy = "dummy2";
+  let jsonObject = JSON.stringify({ key: stringDummy });
   console.log(stringDummy);
   console.log(typeof stringDummy);
+  
   const newCurrent = formatValue(currentPriceG);
   const newTarget = formatValue(targetPriceG);
   const newReason = formatValue(reasoningG);
+  
   console.log(newCurrent, newTarget, newReason);
   console.log(typeof newCurrent, typeof newTarget, typeof newReason);
   console.log("inside the second frame", text);
+  
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg2.png`;
+  
   return c.res({
     image: (
       <div
@@ -305,18 +307,16 @@ app.frame("/:text/secondframe", async (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            bottom: "-32",
+            bottom: "-32px", // Added 'px' for units
             maxWidth: "20px",
             overflow: "visible",
             left: "-35%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           {newCurrent}
-          {/* current */}
         </div>
         <div
           style={{
@@ -327,17 +327,14 @@ app.frame("/:text/secondframe", async (c) => {
             lineHeight: 1.4,
             maxWidth: "20px",
             overflow: "visible",
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            bottom: "13",
-            // border: "1px solid red",
+            bottom: "13px", // Added 'px' for units
             left: "15%",
             whiteSpace: "pre-wrap",
           }}
         >
           {`${newTarget}`}
-          {/* {jsonObject} */}
-          {/* target */}
         </div>
         <div
           style={{
@@ -353,13 +350,13 @@ app.frame("/:text/secondframe", async (c) => {
             lineHeight: 1.4,
             fontWeight: "bold",
             position: "relative",
-            top: "90",
-            left: "10",
+            top: "90px", // Added 'px' for units
+            left: "10px", // Added 'px' for units
             whiteSpace: "pre-wrap",
           }}
         >
           {(() => {
-            const fullText = {newReason};
+            const fullText = newReason;
             const maxLength = 150; // Adjust this value to change when text gets truncated
             return fullText.length > maxLength
               ? fullText.slice(0, maxLength)
@@ -369,16 +366,16 @@ app.frame("/:text/secondframe", async (c) => {
       </div>
     ),
     intents: [
-    <Button  action={`/${encodeURIComponent(idG)}/thirdframe`}>View Stats</Button>,
-    <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>
-  ],
-
+      <Button action={`/${encodeURIComponent(idG)}/thirdframe`}>View Stats</Button>,
+      <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
+    ],
   });
 });
 
 app.frame("/:text/thirdframe", (c) => {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg3.png`;
+  
   return c.res({
     image: (
       <div
@@ -404,13 +401,12 @@ app.frame("/:text/thirdframe", (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            bottom: "-33",
+            bottom: "-33px", // Added 'px' for units
             maxWidth: "20px",
             right: "42%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           0.0001
@@ -422,13 +418,12 @@ app.frame("/:text/thirdframe", (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            bottom: "10",
+            bottom: "10px", // Added 'px' for units
             maxWidth: "20px",
             left: "17%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           0.0003
@@ -440,13 +435,12 @@ app.frame("/:text/thirdframe", (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            top: "80",
+            top: "80px", // Added 'px' for units
             maxWidth: "20px",
             right: "43%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           0.0001
@@ -458,13 +452,12 @@ app.frame("/:text/thirdframe", (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            top: "37",
+            top: "37px", // Added 'px' for units
             maxWidth: "20px",
             left: "16%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           0
@@ -476,13 +469,12 @@ app.frame("/:text/thirdframe", (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            bottom: "-125",
+            bottom: "-125px", // Added 'px' for units
             maxWidth: "20px",
             right: "41%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           50%
@@ -494,13 +486,12 @@ app.frame("/:text/thirdframe", (c) => {
             fontStyle: "normal",
             letterSpacing: "1px",
             lineHeight: 1.4,
-            fontWeight: "bold", // Add this line to make the text bold
+            fontWeight: "bold",
             position: "relative",
-            top: "80",
+            top: "80px", // Added 'px' for units
             maxWidth: "20px",
             left: "17%",
             whiteSpace: "pre-wrap",
-            // border: "1px solid red",
           }}
         >
           0.5
@@ -508,9 +499,9 @@ app.frame("/:text/thirdframe", (c) => {
       </div>
     ),
     intents: [
-    <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
-    <Button  action={`/${encodeURIComponent(idG)}/secondframe`}>Back</Button>
-  ],
+      <Button.Link href="https://invest-right.vercel.app/attestation">Challenge/Accept</Button.Link>,
+      <Button action={`/${encodeURIComponent(idG)}/secondframe`}>Back</Button>,
+    ],
   });
 });
 
