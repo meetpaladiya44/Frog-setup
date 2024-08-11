@@ -28,15 +28,21 @@ let address: string,
     reasoningG: string, 
     currentPriceG: bigint, 
     targetPriceG: bigint, 
-    stakeAmount: bigint, 
-    viewAmount: bigint, 
+    stakeAmountG: bigint,
+    poolAmountG: bigint,
+    totalPositiveStakeG: bigint,
+    totalNegativeStakeG: bigint,
     targetDate: number = 0;
 
-function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string) {
+function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string, stakeAmountP: bigint, poolAmountP: bigint, totalPositiveStakeP: bigint, totalNegativeStakeP: bigint) {
   idG = idP;
   currentPriceG = currentPriceP;
   targetPriceG = targetPriceP;
   reasoningG = reasoningP;
+  stakeAmountG = stakeAmountP;
+  poolAmountG = poolAmountP;
+  totalPositiveStakeG = totalPositiveStakeP;
+  totalNegativeStakeG = totalNegativeStakeP;
 }
 
 async function getPredictionsMain(text: string): Promise<any> {
@@ -160,7 +166,9 @@ app.frame("/:text", async (c) => {
     negativeStakers,
   ] = prediction;
 
-  setData(text, currentPrice, targetPrice, reasoning);
+  const poolAmount = totalFeesCollected + totalPositiveStake + totalNegativeStake;
+
+  setData(text, currentPrice, targetPrice, reasoning, stakeAmount, poolAmount, totalPositiveStake, totalNegativeStake);
 
   return c.res({
     image: (
@@ -266,17 +274,11 @@ app.frame("/:text/secondframe", async (c) => {
   const text = decodeURIComponent(req.param("text"));
   console.log(typeof currentPriceG);
   
-  let stringDummy = "dummy2";
-  let jsonObject = JSON.stringify({ key: stringDummy });
-  console.log(stringDummy);
-  console.log(typeof stringDummy);
-  
   const newCurrent = formatValue(currentPriceG);
   const newTarget = formatValue(targetPriceG);
   const newReason = formatValue(reasoningG);
   
   console.log(newCurrent, newTarget, newReason);
-  console.log(typeof newCurrent, typeof newTarget, typeof newReason);
   console.log("inside the second frame", text);
   
   const baseUrl = process.env.NEXT_PUBLIC_URL;
@@ -375,6 +377,9 @@ app.frame("/:text/secondframe", async (c) => {
 app.frame("/:text/thirdframe", (c) => {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg3.png`;
+
+  console.log(stakeAmountG, poolAmountG, totalPositiveStakeG, totalPositiveStakeG);
+  console.log(typeof stakeAmountG, typeof poolAmountG, typeof totalPositiveStakeG, typeof totalPositiveStakeG);
   
   return c.res({
     image: (
@@ -409,7 +414,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          0.0001
+          {weiToEth(stakeAmountG)}
         </div>
         <div
           style={{
@@ -426,7 +431,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          0.0003
+          {weiToEth(poolAmountG)}
         </div>
         <div
           style={{
@@ -443,7 +448,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          0.0001
+          {weiToEth(totalPositiveStakeG)}
         </div>
         <div
           style={{
@@ -460,7 +465,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          0
+          {weiToEth(totalNegativeStakeG)}
         </div>
         <div
           style={{
