@@ -8,6 +8,8 @@ import { serveStatic } from "frog/serve-static";
 import InvestRightABI from "../../utils/InvestRightABI.json";
 import { Alchemy, Network } from "alchemy-sdk";
 import { neynar } from 'frog/middlewares'
+import abi from "../../abi.json";
+import type { Address } from "viem";
 
 // Configure Alchemy SDK
 const alchemyConfig = {
@@ -146,11 +148,24 @@ app.frame("/", (c) => {
       <TextInput placeholder="Enter custom fruit..." />,
       <Button value="apples">Apples</Button>,
       <Button value="oranges">Oranges</Button>,
-      <Button value="bananas">Bananas</Button>,
+      // <Button value="bananas">Bananas</Button>,
+      <Button.Transaction target="/mint">Bananas</Button.Transaction>,
       status === "response" && <Button.Reset>Reset</Button.Reset>,
     ],
   });
 });
+
+app.transaction('/mint', (c) => {
+  // Contract transaction response.
+  const address = c.address as Address;
+  console.log("Address came", address);
+  return c.contract({
+    abi,
+    chainId: 'eip155:10',
+    functionName: 'mint',
+    to: '0xd2135CfB216b74109775236E36d4b433F1DF507B'
+  })
+})
 
 app.frame("/:text", async (c) => {
   const { req, status } = c;
