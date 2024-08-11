@@ -118,7 +118,7 @@ app.frame("/:text", async (c) => {
   const { req, status } = c;
   const text = req.param("text") || "Crypto Test";
   const baseUrl = process.env.NEXT_PUBLIC_URL;
-  const background = `${baseUrl}/bg.png`;
+  const background = `${baseUrl}/bg1.png`;
 
   const prediction = await getPredictions(text);
   console.log(prediction);
@@ -289,7 +289,7 @@ app.frame("/second/newframe", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.0005 
+          2700 
         </div>
         <div
           style={{
@@ -308,7 +308,7 @@ app.frame("/second/newframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          0
+          3000
         </div>
         <div
           style={{
@@ -330,8 +330,7 @@ app.frame("/second/newframe", (c) => {
           }}
         >
           {(() => {
-            const fullText =
-              "Upcoming protocol upgrade promises enhanced scalability, attracting more developers and users to the ecosystem.";
+            const fullText = "Upcoming protocol upgrade promises enhanced scalability, attracting more developers and users to the ecosystem.";
             const maxLength = 150; // Adjust this value to change when text gets truncated
             return fullText.length > maxLength
               ? fullText.slice(0, maxLength)
@@ -385,7 +384,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          8 
+          0.0001
         </div>
         <div
           style={{
@@ -403,7 +402,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.0034 
+          0.0003
         </div>
         <div
           style={{
@@ -421,7 +420,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.345 
+          0.0001
         </div>
         <div
           style={{
@@ -439,7 +438,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          0.269 
+          0
         </div>
         <div
           style={{
@@ -457,7 +456,7 @@ app.frame("/third/frame/route", (c) => {
             // border: "1px solid red",
           }}
         >
-          20%
+          50%
         </div>
         <div
           style={{
