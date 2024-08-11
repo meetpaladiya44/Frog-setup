@@ -40,6 +40,7 @@ let address: string,
     totalNegativeStakeG: bigint,
     targetDate: number = 0;
 
+//Global function
 function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string, stakeAmountP: bigint, poolAmountP: bigint, totalPositiveStakeP: bigint, totalNegativeStakeP: bigint) {
   idG = idP;
   currentPriceG = currentPriceP;
