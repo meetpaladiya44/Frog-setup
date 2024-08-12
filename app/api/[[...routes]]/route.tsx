@@ -1,12 +1,14 @@
 /** @jsxImportSource frog/jsx */
 
 import { ethers } from "ethers";
-import { Button, Frog, TextInput } from "frog";
+import { Button, Frog, TextInput, parseEther } from "frog";
 import { devtools } from "frog/dev";
 import { handle } from "frog/next";
 import { serveStatic } from "frog/serve-static";
 import InvestRightABI from "../../utils/InvestRightABI.json";
 import { Alchemy, Network } from "alchemy-sdk";
+import { abi } from '../../utils/InvestRight';
+import type { Address } from "viem";
 
 // Configure Alchemy SDK
 const alchemyConfig = {
@@ -22,19 +24,22 @@ const app = new Frog({
   title: "Frog Frame",
 });
 
-let address: string, 
-    idG: string, 
-    coin: string, 
-    reasoningG: string, 
-    currentPriceG: bigint, 
-    targetPriceG: bigint, 
-    stakeAmountG: bigint,
-    poolAmountG: bigint,
-    totalPositiveStakeG: bigint,
-    totalNegativeStakeG: bigint,
-    targetDate: number = 0;
+let address: string,
+  idG: string,
+  coin: string,
+  reasoningG: string,
+  currentPriceG: bigint,
+  targetPriceG: bigint,
+  stakeAmountG: bigint,
+  poolAmountG: bigint,
+  totalPositiveStakeG: bigint,
+  totalNegativeStakeG: bigint,
+  viewAmountG: bigint,
+  newIdG: bigint,
+  targetDate: number = 0;
 
-function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string, stakeAmountP: bigint, poolAmountP: bigint, totalPositiveStakeP: bigint, totalNegativeStakeP: bigint) {
+function setData(
+idP: string, currentPriceP: bigint, targetPriceP: bigint, reasoningP: string, stakeAmountP: bigint, poolAmountP: bigint, totalPositiveStakeP: bigint, totalNegativeStakeP: bigint, viewAmountP: bigint, newIdP: bigint) {
   idG = idP;
   currentPriceG = currentPriceP;
   targetPriceG = targetPriceP;
@@ -43,6 +48,8 @@ function setData(idP: string, currentPriceP: bigint, targetPriceP: bigint, reaso
   poolAmountG = poolAmountP;
   totalPositiveStakeG = totalPositiveStakeP;
   totalNegativeStakeG = totalNegativeStakeP;
+  viewAmountG = viewAmountP;
+  newIdG = newIdP;
 }
 
 async function getPredictionsMain(text: string): Promise<any> {
@@ -63,6 +70,26 @@ async function getPredictionsMain(text: string): Promise<any> {
   } catch (error: any) {
     console.error("Error getting prediction:", error);
     return "Error: " + error.message;
+  }
+}
+
+async function getIsWhiteListed(predictionId: any | ethers.Overrides, address: any | ethers.Overrides) {
+  try {
+    const provider = new ethers.JsonRpcProvider(
+      "https://eth-sepolia.g.alchemy.com/v2/RlpjIG_DtVn1fVxzOufTIrTAa8YQSM1x"
+    );
+
+    const contract = new ethers.Contract(
+      "0x7ACC7E73967300a20f4f5Ba92fF9CB548b47Ea30",
+      InvestRightABI,
+      provider
+    );
+
+    const isWhitelisted = await contract.isWhitelisted(predictionId, address);
+    return isWhitelisted;
+  } catch (error) {
+    console.error("Error checking whitelist status:", error);
+    return false;
   }
 }
 
@@ -141,6 +168,7 @@ app.frame("/", (c) => {
 app.frame("/:text", async (c) => {
   const { req, status } = c;
   const text = req.param("text") || "Crypto Test";
+  const id = BigInt(text);
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg1.png`;
 
@@ -166,11 +194,26 @@ app.frame("/:text", async (c) => {
     negativeStakers,
   ] = prediction;
 
-  const poolAmount = totalFeesCollected + totalPositiveStake + totalNegativeStake;
+  const poolAmount =
+    totalFeesCollected + totalPositiveStake + totalNegativeStake;
 
-  setData(text, currentPrice, targetPrice, reasoning, stakeAmount, poolAmount, totalPositiveStake, totalNegativeStake);
+  setData(
+    text,
+    currentPrice,
+    targetPrice,
+    reasoning,
+    stakeAmount,
+    poolAmount,
+    totalPositiveStake,
+    totalNegativeStake,
+    viewAmount,
+    id
+  );
+
+  console.log(newIdG, viewAmountG)
 
   return c.res({
+    action: `/${encodeURIComponent(text)}/secondframe`,
     image: (
       <div
         style={{
@@ -241,7 +284,9 @@ app.frame("/:text", async (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {new Date(Number(formatValue(targetDate)) * 1000).toLocaleDateString()}
+          {new Date(
+            Number(formatValue(targetDate)) * 1000
+          ).toLocaleDateString()}
         </div>
         <div
           style={{
@@ -264,8 +309,8 @@ app.frame("/:text", async (c) => {
       </div>
     ),
     intents: [
-      <Button action={`/${encodeURIComponent(text)}/secondframe`}>Read</Button>,
-    ],
+      <Button.Transaction target="/new/payfee">Pay Fees</Button.Transaction>
+    ]
   });
 });
 
@@ -273,18 +318,19 @@ app.frame("/:text/secondframe", async (c) => {
   const { req } = c;
   const text = decodeURIComponent(req.param("text"));
   console.log(typeof currentPriceG);
-  
+
   const newCurrent = formatValue(currentPriceG);
   const newTarget = formatValue(targetPriceG);
   const newReason = formatValue(reasoningG);
-  
+
   console.log(newCurrent, newTarget, newReason);
   console.log("inside the second frame", text);
-  
+
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg2.png`;
-  
+
   return c.res({
+    action: `/${encodeURIComponent(idG)}/thirdframe`,
     image: (
       <div
         style={{
@@ -368,8 +414,12 @@ app.frame("/:text/secondframe", async (c) => {
       </div>
     ),
     intents: [
-      <Button action={`/${encodeURIComponent(idG)}/thirdframe`}>View Stats</Button>,
-      <Button.Link href={`https://invest-right.vercel.app/attestation/${idG}`}>Challenge/Accept</Button.Link>,
+      <Button>
+        View Stats
+      </Button>,
+      <Button.Link href={`https://invest-right.vercel.app/attestation/${idG}`}>
+        Challenge/Accept
+      </Button.Link>,
     ],
   });
 });
@@ -378,9 +428,19 @@ app.frame("/:text/thirdframe", (c) => {
   const baseUrl = process.env.NEXT_PUBLIC_URL;
   const background = `${baseUrl}/bg3.png`;
 
-  console.log(stakeAmountG, poolAmountG, totalPositiveStakeG, totalPositiveStakeG);
-  console.log(typeof stakeAmountG, typeof poolAmountG, typeof totalPositiveStakeG, typeof totalPositiveStakeG);
-  
+  console.log(
+    stakeAmountG,
+    poolAmountG,
+    totalPositiveStakeG,
+    totalPositiveStakeG
+  );
+  console.log(
+    typeof stakeAmountG,
+    typeof poolAmountG,
+    typeof totalPositiveStakeG,
+    typeof totalPositiveStakeG
+  );
+
   return c.res({
     image: (
       <div
@@ -504,10 +564,38 @@ app.frame("/:text/thirdframe", (c) => {
       </div>
     ),
     intents: [
-      <Button.Link href={`https://invest-right.vercel.app/attestation/${idG}`}>Challenge/Accept</Button.Link>,
+      <Button.Link href={`https://invest-right.vercel.app/attestation/${idG}`}>
+        Challenge/Accept
+      </Button.Link>,
       <Button action={`/${encodeURIComponent(idG)}/secondframe`}>Back</Button>,
     ],
   });
+});
+
+app.transaction("/new/payfee", async (c) => {
+  const walletAddress = c.address as Address;
+  console.log("Address came", walletAddress);
+
+  const isWhitelisted = await getIsWhiteListed(newIdG, walletAddress);
+
+  if (!isWhitelisted) {
+    return c.contract({
+      abi,
+      chainId: "eip155:11155111",
+      functionName: "viewerFees",
+      args: [newIdG],
+      value: viewAmountG,
+      to: "0x7ACC7E73967300a20f4f5Ba92fF9CB548b47Ea30",
+    });
+  } else {
+    return c.contract({
+      abi,
+      chainId: "eip155:11155111",
+      functionName: "getPredictions",
+      args: [newIdG],
+      to: "0x7ACC7E73967300a20f4f5Ba92fF9CB548b47Ea30",
+    });
+  }
 });
 
 devtools(app, { serveStatic });
