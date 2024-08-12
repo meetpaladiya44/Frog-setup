@@ -542,7 +542,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          50%
+          NA
         </div>
         <div
           style={{
@@ -559,7 +559,7 @@ app.frame("/:text/thirdframe", (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          0.5
+          NA
         </div>
       </div>
     ),
